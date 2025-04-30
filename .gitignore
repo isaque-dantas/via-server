@@ -1,0 +1,7 @@
+.venv
+templates
+**/migrations
+.idea
+**/*sql*
+instructions.md
+test.py
