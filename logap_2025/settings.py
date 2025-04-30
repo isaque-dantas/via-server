@@ -83,7 +83,7 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=6),
 }
 
-AUTH_USER_MODEL = 'api.User'
+AUTH_USER_MODEL = 'api.Employee'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
