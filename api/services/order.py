@@ -44,6 +44,17 @@ class OrderService:
         if employee:
             order.employee = employee
 
+        products = new_order_data.get('products')
+        if products:
+            order.products.clear()
+
+            for product in products:
+                OrderProduct.objects.create(
+                    order=order,
+                    product=product.instance,
+                    quantity=product.initial_data['quantity']
+                )
+
         order.save()
 
     @classmethod
