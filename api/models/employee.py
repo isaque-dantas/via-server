@@ -30,7 +30,7 @@ class EmployeeManager(BaseUserManager):
 
 class Employee(AbstractBaseUser):
     name = models.CharField(max_length=128, blank=False)
-    email = models.EmailField(max_length=128, unique=True, blank=False)
+    email = models.EmailField(unique=True, blank=False)
 
     objects = EmployeeManager()
     USERNAME_FIELD = 'email'
