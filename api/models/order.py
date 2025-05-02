@@ -12,6 +12,7 @@ class Order(models.Model):
         CANCELLED = 'Cancelado'
 
     status = models.CharField(max_length=128, choices=Status.choices, default=Status.IN_PROGRESS)
+    description = models.CharField(max_length=256, blank=True, null=True)
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
