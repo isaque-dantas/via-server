@@ -3,7 +3,7 @@ from rest_framework.test import APITestCase
 
 from api import BASE_URL
 from api.models.customer import Customer
-from api.models.order import Order
+from api.models.order import Order, OrderProduct
 from api.models.product import Product
 from api.serializers.order import OrderSerializer
 from api.services.order import OrderService
@@ -19,7 +19,8 @@ class OrderTestCase(APITestCase):
         employee, customer = Utils.create_default_employee_and_customer()
         order_data = {
             'customer': customer.id,
-            'products': [{'id': product_1.id, 'quantity': 2}, {'id': product_2.id, 'quantity': 3}]
+            'products': [{'id': product_1.id, 'quantity': 2}, {'id': product_2.id, 'quantity': 3}],
+            'description': 'Descrição do pedido!'
         }
 
         response = self.client.post(
@@ -83,6 +84,44 @@ class OrderTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
+    def test_put__products_edited__should_return_NO_CONTENT(self):
+        product_1 = Product.objects.create(**Utils.product_data)
+        product_2 = Product.objects.create(**Utils.product_data)
+        product_3 = Product.objects.create(**Utils.product_data)
+
+        employee, customer = Utils.create_default_employee_and_customer()
+        order_data = {
+            'employee': employee,
+            'customer': customer.id,
+            'products': [{'id': product_1.id, 'quantity': 2}, {'id': product_2.id, 'quantity': 3}]
+        }
+
+        serializer = OrderSerializer(data=order_data)
+        serializer.is_valid()
+        order_id = OrderService.create(serializer.validated_data).id
+
+        edited_quantity = 1000
+        order_data = {
+            'employee': employee.id,
+            'customer': customer.id,
+            'products': [{'id': product_3.id, 'quantity': edited_quantity}],
+        }
+
+        response = self.client.put(
+            BASE_URL + f'order/{order_id}',
+            order_data,
+            headers=Utils.get_headers_for_user(),
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # print(Order.objects.get(pk=order_id).products.all())
+        # print(Order.objects.get(pk=order_id).products.filter(pk=product_1.id).exists())
+        self.assertTrue(Order.objects.get(pk=order_id).products.filter(pk=product_3.id).exists())
+        # self.assertEqual(Order.objects.get(pk=order_id).products.get(pk=product_3.id).quantity, edited_quantity)
+        self.assertEqual(OrderProduct.objects.get(order__pk=order_id, product__pk=product_3.id).quantity, edited_quantity)
+
     def test_delete__on_happy_path__should_return_NO_CONTENT(self):
         employee, customer = Utils.create_default_employee_and_customer()
         order_data = {"employee": employee, "customer": customer}
@@ -129,6 +168,18 @@ class OrderSerializerTestCase(APITestCase):
             'employee': employee,
             'customer': customer.id,
             'products': [{'quantity': 2}]
+        }
+
+        serializer = OrderSerializer(data=order_data)
+        self.assertFalse(serializer.is_valid())
+
+    def test_validate__products_not_a_list__should_return_INVALID(self):
+        product = Product.objects.create(**Utils.product_data)
+        employee, customer = Utils.create_default_employee_and_customer()
+        order_data = {
+            'employee': employee,
+            'customer': customer.id,
+            'products': {'id': product.id, 'quantity': 2}
         }
 
         serializer = OrderSerializer(data=order_data)
