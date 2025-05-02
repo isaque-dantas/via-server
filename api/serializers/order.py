@@ -13,7 +13,7 @@ from api.services.product import ProductService
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        fields = ['id', 'status', 'customer', 'employee', 'products']
+        fields = ['id', 'status', 'customer', 'employee', 'products', 'description']
 
     products = ProductSerializer(many=True, read_only=True)
 
@@ -26,13 +26,17 @@ class OrderSerializer(serializers.ModelSerializer):
             customer = CustomerService.get(customer_pk)
 
         if not data.get('products'):
-            raise ValidationError('O campo \'products\' é obrigatório')
+            raise ValidationError('O campo \'products\' é obrigatório.')
+
+        if not isinstance(data.get('products'), list):
+            raise ValidationError('O campo \'products\' deve ser uma lista.')
 
         products = ProductService.get_serializers_from_raw_products(data['products'])
 
         return {
             'id': data.get('id'),
             'status': data.get('status'),
+            'description': data.get('description'),
             'customer': customer,
             'employee': data.get('employee'),
             'products': products,
