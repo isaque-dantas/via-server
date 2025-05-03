@@ -57,7 +57,8 @@ class ProductService:
         return [
             ProductSerializer(
                 instance=cls.get(p['id']),
-                data={'quantity': p['quantity']}
+                data={'quantity': p['quantity']},
+                context={'is_ordering': True}
             )
 
             for p in raw_products
@@ -85,3 +86,26 @@ class ProductService:
         }
 
         return errors
+
+    @classmethod
+    def has_duplicates(cls, products: list):
+        return list(
+            set(
+                [
+                    product.instance.id
+                    for i, product in enumerate(products)
+
+                    if (
+                        product.instance.id
+
+                        in
+
+                        [
+                            p.instance.id
+                            for j, p in enumerate(products)
+                            if j != i
+                        ]
+                )
+                ]
+            )
+        )
