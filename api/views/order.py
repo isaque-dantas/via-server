@@ -2,6 +2,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from api.models.order import Order
 from api.serializers.order import OrderSerializer
 from api.services.order import OrderService
 
@@ -85,5 +86,27 @@ class SingleOrderViewSet(APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         OrderService.delete(pk)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @staticmethod
+    def patch(request, pk: int):
+        if not request.user.is_authenticated:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+        if not OrderService.exists(pk):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        new_status = request.data.get('status')
+
+        print(Order.Status.choices)
+
+        if not new_status:
+            return Response('O campo \'status\' é obrigatório', status=status.HTTP_400_BAD_REQUEST)
+        if new_status not in Order.Status.values:
+            return Response(f'O status deve ser um dos indicados: {", ".join(Order.Status.values)}.', status=status.HTTP_400_BAD_REQUEST)
+
+        order = OrderService.get(pk)
+        OrderService.update_status(new_status, order)
 
         return Response(status=status.HTTP_204_NO_CONTENT)

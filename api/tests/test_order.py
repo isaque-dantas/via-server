@@ -1,3 +1,5 @@
+import json
+
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -18,6 +20,7 @@ class OrderTestCase(APITestCase):
 
         employee, customer = Utils.create_default_employee_and_customer()
         order_data = {
+            'date': '2020-01-01',
             'customer': customer.id,
             'products': [{'id': product_1.id, 'quantity': 2}, {'id': product_2.id, 'quantity': 3}],
             'description': 'Descrição do pedido!'
@@ -31,10 +34,12 @@ class OrderTestCase(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        print(json.dumps(response.data, indent=4))
 
     def test_get_many__on_happy_path__should_return_OK(self):
         employee, customer = Utils.create_default_employee_and_customer()
-        order_data = {"employee": employee, "customer": customer}
+        order_data = {
+            'date': '2020-01-01', "employee": employee, "customer": customer}
         Order.objects.create(**order_data)
 
         response = self.client.get(
@@ -45,7 +50,8 @@ class OrderTestCase(APITestCase):
 
     def test_get_single__on_happy_path__should_return_OK(self):
         employee, customer = Utils.create_default_employee_and_customer()
-        order_data = {"employee": employee, "customer": customer}
+        order_data = {
+            'date': '2020-01-01', "employee": employee, "customer": customer}
 
         order_id = Order.objects.create(**order_data).id
 
@@ -62,6 +68,7 @@ class OrderTestCase(APITestCase):
 
         employee, customer = Utils.create_default_employee_and_customer()
         order_data = {
+            'date': '2020-01-01',
             'employee': employee,
             'customer': customer.id,
             'products': [{'id': product_1.id, 'quantity': 2}, {'id': product_2.id, 'quantity': 3}]
@@ -91,6 +98,7 @@ class OrderTestCase(APITestCase):
 
         employee, customer = Utils.create_default_employee_and_customer()
         order_data = {
+            'date': '2020-01-01',
             'employee': employee,
             'customer': customer.id,
             'products': [{'id': product_1.id, 'quantity': 2}, {'id': product_2.id, 'quantity': 3}]
@@ -102,6 +110,7 @@ class OrderTestCase(APITestCase):
 
         edited_quantity = 1000
         order_data = {
+            'date': '2020-01-01',
             'employee': employee.id,
             'customer': customer.id,
             'products': [{'id': product_3.id, 'quantity': edited_quantity}],
@@ -120,11 +129,13 @@ class OrderTestCase(APITestCase):
         # print(Order.objects.get(pk=order_id).products.filter(pk=product_1.id).exists())
         self.assertTrue(Order.objects.get(pk=order_id).products.filter(pk=product_3.id).exists())
         # self.assertEqual(Order.objects.get(pk=order_id).products.get(pk=product_3.id).quantity, edited_quantity)
-        self.assertEqual(OrderProduct.objects.get(order__pk=order_id, product__pk=product_3.id).quantity, edited_quantity)
+        self.assertEqual(OrderProduct.objects.get(order__pk=order_id, product__pk=product_3.id).quantity,
+                         edited_quantity)
 
     def test_delete__on_happy_path__should_return_NO_CONTENT(self):
         employee, customer = Utils.create_default_employee_and_customer()
-        order_data = {"employee": employee, "customer": customer}
+        order_data = {
+            'date': '2020-01-01', "employee": employee, "customer": customer}
 
         order_id = Order.objects.create(**order_data).id
 
@@ -135,6 +146,31 @@ class OrderTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
+    def test_patch__on_happy_path__should_return_NO_CONTENT(self):
+        product_1 = Product.objects.create(**Utils.product_data)
+
+        employee, customer = Utils.create_default_employee_and_customer()
+        order_data = {
+            'date': '2020-01-01',
+            'employee': employee,
+            'customer': customer.id,
+            'products': [{'id': product_1.id, 'quantity': 2}]
+        }
+
+        serializer = OrderSerializer(data=order_data)
+        serializer.is_valid()
+        order_id = OrderService.create(serializer.validated_data).id
+
+        response = self.client.patch(
+            BASE_URL + f'order/{order_id}',
+            {"status": "Cancelado"},
+            headers=Utils.get_headers_for_user(),
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Order.objects.get(pk=order_id).status, "Cancelado")
+
 
 class OrderSerializerTestCase(APITestCase):
 
@@ -144,6 +180,7 @@ class OrderSerializerTestCase(APITestCase):
 
         employee, _ = Utils.create_default_employee_and_customer()
         order_data = {
+            'date': '2020-01-01',
             'employee': employee,
             'products': [{'id': product_1.id, 'quantity': 2}, {'id': product_2.id, 'quantity': 3}]
         }
@@ -154,6 +191,7 @@ class OrderSerializerTestCase(APITestCase):
     def test_validate__without_products__should_return_INVALID(self):
         employee, customer = Utils.create_default_employee_and_customer()
         order_data = {
+            'date': '2020-01-01',
             'employee': employee,
             'customer': customer.id,
             'products': []
@@ -165,6 +203,7 @@ class OrderSerializerTestCase(APITestCase):
     def test_validate__product_without_id__should_return_INVALID(self):
         employee, customer = Utils.create_default_employee_and_customer()
         order_data = {
+            'date': '2020-01-01',
             'employee': employee,
             'customer': customer.id,
             'products': [{'quantity': 2}]
@@ -177,9 +216,37 @@ class OrderSerializerTestCase(APITestCase):
         product = Product.objects.create(**Utils.product_data)
         employee, customer = Utils.create_default_employee_and_customer()
         order_data = {
+            'date': '2020-01-01',
             'employee': employee,
             'customer': customer.id,
             'products': {'id': product.id, 'quantity': 2}
+        }
+
+        serializer = OrderSerializer(data=order_data)
+        is_valid = serializer.is_valid()
+        self.assertFalse(is_valid)
+
+    def test_validate__date_after_current__should_return_INVALID(self):
+        product = Product.objects.create(**Utils.product_data)
+        employee, customer = Utils.create_default_employee_and_customer()
+        order_data = {
+            'date': '2030-01-01',
+            'employee': employee,
+            'customer': customer.id,
+            'products': [{'id': product.id, 'quantity': 2}]
+        }
+
+        serializer = OrderSerializer(data=order_data)
+        self.assertFalse(serializer.is_valid())
+
+    def test_validate__duplicated_products__should_return_INVALID(self):
+        product = Product.objects.create(**Utils.product_data)
+        employee, customer = Utils.create_default_employee_and_customer()
+        order_data = {
+            'date': '2020-01-01',
+            'employee': employee,
+            'customer': customer.id,
+            'products': [{'id': product.id, 'quantity': 2}, {'id': product.id, 'quantity': 5}]
         }
 
         serializer = OrderSerializer(data=order_data)
