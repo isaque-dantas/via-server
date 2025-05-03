@@ -3,11 +3,12 @@ from django.urls import path
 from api.views.customer import CustomerViewSet, SingleCustomerViewSet
 from api.views.order import OrderViewSet, SingleOrderViewSet
 from api.views.product import ProductViewSet, SingleProductViewSet
-from api.views.employee import EmployeeViewSet
+from api.views.employee import EmployeeViewSet, ExternalEmployeeViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
     path('employee', EmployeeViewSet.as_view()),
+    path('employee/<email>', ExternalEmployeeViewSet.as_view()),
     path('product', ProductViewSet.as_view()),
     path('product/<int:pk>', SingleProductViewSet.as_view()),
     path('customer', CustomerViewSet.as_view()),
