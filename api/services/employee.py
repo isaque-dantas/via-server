@@ -17,3 +17,11 @@ class EmployeeService:
     @staticmethod
     def exists(pk: int) -> bool:
         return Employee.objects.filter(pk=pk).exists()
+
+    @classmethod
+    def get_by_email(cls, email):
+        return Employee.objects.get(email=email)
+
+    @classmethod
+    def email_exists(cls, email):
+        return Employee.objects.filter(email=email).exists()

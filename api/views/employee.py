@@ -26,3 +26,18 @@ class EmployeeViewSet(APIView):
 
         serializer = EmployeeSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ExternalEmployeeViewSet(APIView):
+    @staticmethod
+    def get(request, email: str):
+        if not request.user.is_authenticated:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+        if not EmployeeService.email_exists(email):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        employee = EmployeeService.get_by_email(email)
+        serializer = EmployeeSerializer(employee)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
