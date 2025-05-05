@@ -1,5 +1,4 @@
 from api.models.customer import Customer
-from api.serializers.customer import CustomerSerializer
 
 
 class CustomerService:
