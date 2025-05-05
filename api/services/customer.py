@@ -1,4 +1,7 @@
+from django.db.models import Count
+
 from api.models.customer import Customer
+from api.models.order import Order
 
 
 class CustomerService:
@@ -39,3 +42,11 @@ class CustomerService:
     @staticmethod
     def delete(pk: int):
         Customer.objects.filter(pk=pk).delete()
+
+    @classmethod
+    def get_orders_count(cls, customer: Customer):
+        return (
+            Order.objects
+            .filter(customer=customer)
+            .aggregate(orders_count=Count('id'))
+        )['orders_count']

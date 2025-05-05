@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from api.models.customer import Customer
+from api.services.customer import CustomerService
 
 
 class CustomerSerializer(serializers.ModelSerializer):
@@ -11,7 +12,8 @@ class CustomerSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
 
-        if getattr(instance, 'orders_count', None):
-            representation.update({'orders_count': instance.orders_count})
+        representation.update({
+            'orders_count': CustomerService.get_orders_count(instance)
+        })
 
         return representation

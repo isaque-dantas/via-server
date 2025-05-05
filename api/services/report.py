@@ -1,4 +1,4 @@
-from django.db.models import Count, Sum, F
+from django.db.models import Count, Sum, F, Value
 
 from api.models.customer import Customer
 from api.models.order import OrderProduct, Order
@@ -43,8 +43,15 @@ class ReportService:
 
     @classmethod
     def get_most_active_customers(cls):
-        return (
-            Customer.objects.
-            annotate(orders_count=Count('orders'))
+        customers_with_orders = (
+            Customer.objects
+            .annotate(orders_count=Count('orders'))
             .order_by('-orders_count')
         )
+
+        return customers_with_orders
+        # return customers_with_orders.union(
+        #     Customer.objects
+        #     .annotate(orders_count=Value(239))
+        #     .exclude(pk__in=customers_with_orders)
+        # )
