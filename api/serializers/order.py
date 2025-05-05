@@ -8,6 +8,7 @@ from api.serializers.customer import CustomerSerializer
 from api.serializers.employee import EmployeeSerializer
 from api.serializers.product import ProductSerializer
 from api.services.customer import CustomerService
+from api.services.order import OrderService
 from api.services.product import ProductService
 
 
@@ -77,8 +78,6 @@ class OrderSerializer(serializers.ModelSerializer):
         return attrs
 
     def to_representation(self, instance):
-        # print(f'{instance=}')
-
         return {
             'id': instance.id,
             'status': instance.status,
@@ -91,4 +90,5 @@ class OrderSerializer(serializers.ModelSerializer):
                 many=True,
                 context={'order_id': instance.id}
             ).data,
+            'total_cost': OrderService.get_total_cost(instance)
         }
