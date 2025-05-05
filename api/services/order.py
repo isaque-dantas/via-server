@@ -1,3 +1,7 @@
+from decimal import Decimal
+
+from django.db.models import F, Sum, QuerySet
+
 from api.models.order import Order, OrderProduct
 
 
@@ -77,3 +81,25 @@ class OrderService:
     def update_status(cls, new_status: str, order: Order):
         order.status = new_status
         order.save()
+
+    @classmethod
+    def get_total_cost(cls, instance: Order) -> Decimal:
+        return (
+            OrderProduct.objects
+            .filter(order=instance)
+            .aggregate(
+                total_cost=Sum(F('quantity') * F('product__price'))
+            )
+        )['total_cost']
+
+    @classmethod
+    def get_related_to_customer(cls, customer_id: int) -> QuerySet[Order]:
+        return Order.objects.filter(customer__pk=customer_id)
+
+    @classmethod
+    def get_related_to_product(cls, product_id: int):
+        return Order.objects.filter(orderproduct__product_id=product_id)
+
+    @classmethod
+    def get_related_to_employee(cls, employee_email: int):
+        return Order.objects.filter(employee__email=employee_email)
