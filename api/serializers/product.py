@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from api.models.product import Product
-from api.services.order import OrderService
+from api.services.order_product import OrderProductService
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -49,7 +49,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
         order_id = self.context.get('order_id')
         if order_id:
-            quantity = OrderService.get_quantity(
+            quantity = OrderProductService.get_quantity(
                 product_id=instance.id,
                 order_id=order_id
             )
