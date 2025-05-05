@@ -7,6 +7,8 @@ class VowelReaderService:
 
     @classmethod
     def get_reading_data(cls, data: str) -> dict:
+        one_ns_in_ms = 10 ** (-3)
+
         start = time.time_ns()
         vowel = cls.get_vowel(data)
         end = time.time_ns()
@@ -14,7 +16,7 @@ class VowelReaderService:
         return {
             "string": data,
             "vogal": vowel,
-            "tempoTotal": f"{(end - start) * 1e3:.2f}ms"
+            "tempoTotal": f"{(end - start) * one_ns_in_ms :.2f}ms"
         }
 
     @classmethod
