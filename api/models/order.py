@@ -15,8 +15,8 @@ class Order(models.Model):
     description = models.CharField(max_length=256, blank=True, null=True)
     date = models.DateField()
 
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='orders')
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='orders')
     products = models.ManyToManyField(Product, through='OrderProduct')
 
     objects = models.Manager()
