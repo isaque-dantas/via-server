@@ -35,6 +35,12 @@ class ReportService:
 
         query['orders_quantity'] = Order.objects.count()
 
+        if not query.get('total_amount_invoiced'):
+            query['total_amount_invoiced'] = 0
+
+        if not query.get('total_sold_products_quantity'):
+            query['total_sold_products_quantity'] = 0
+
         return query
 
     @classmethod
